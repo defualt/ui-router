@@ -837,7 +837,7 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory,           $
          * })
          * </pre>
          */
-        evt = $rootScope.$broadcast('$stateChangeStart', to.self, toParams, from.self, fromParams);
+        evt = $rootScope.$broadcast('$stateChangeStart', to.self, toParams, from.self, fromParams, options);
         if (evt.defaultPrevented) {
           syncUrl();
           return TransitionPrevented;
@@ -919,7 +919,7 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory,           $
          * @param {State} fromState The current state, pre-transition.
          * @param {Object} fromParams The params supplied to the `fromState`.
          */
-          $rootScope.$broadcast('$stateChangeSuccess', to.self, toParams, from.self, fromParams);
+          $rootScope.$broadcast('$stateChangeSuccess', to.self, toParams, from.self, fromParams, options);
         }
         currentLocation = $location.url();
 
@@ -946,7 +946,7 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory,           $
          * @param {Object} fromParams The params supplied to the `fromState`.
          * @param {Error} error The resolve error object.
          */
-        $rootScope.$broadcast('$stateChangeError', to.self, toParams, from.self, fromParams, error);
+        $rootScope.$broadcast('$stateChangeError', to.self, toParams, from.self, fromParams, error, options);
         syncUrl();
 
         return $q.reject(error);
