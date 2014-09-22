@@ -2917,6 +2917,16 @@ function $StateRefDirective($state, $timeout) {
     restrict: 'A',
     require: '?^uiSrefActive',
     link: function(scope, element, attrs, uiSrefActive) {
+
+
+      var enabled = true;
+      attrs.$observe('uiSrefEnabled', function(value) {
+          value = typeof value === 'undefined' ? true : value;
+          value = value === 'true' ? true : value;
+          value = value === 'false' ? false : value;
+          enabled = !!value;
+      });
+
       var ref = parseStateRef(attrs.uiSref);
       var params = null, url = null, base = stateContext(element) || $state.$current;
       var isForm = element[0].nodeName === "FORM";
@@ -2961,10 +2971,12 @@ function $StateRefDirective($state, $timeout) {
       element.bind("click", function(e) {
         var button = e.which || e.button;
         if ( !(button > 1 || e.ctrlKey || e.metaKey || e.shiftKey || element.attr('target')) ) {
-          // HACK: This is to allow ng-clicks to be processed before the transition is initiated:
-          $timeout(function() {
-            $state.go(ref.state, params, options);
-          });
+          if(enabled){
+            // HACK: This is to allow ng-clicks to be processed before the transition is initiated:
+            $timeout(function() {
+              $state.go(ref.state, params, options);
+            });
+          }
           e.preventDefault();
         }
       });
