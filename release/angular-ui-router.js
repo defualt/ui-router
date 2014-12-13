@@ -2864,7 +2864,7 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory) {
        * })
        * </pre>
        */
-      var evt = $rootScope.$broadcast('$stateNotFound', redirect, state, params);
+      var evt = $rootScope.$broadcast('$stateNotFound', redirect, state, params, options);
 
       if (evt.defaultPrevented) {
         $urlRouter.update();
@@ -3137,7 +3137,7 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory) {
          * })
          * </pre>
          */
-        if ($rootScope.$broadcast('$stateChangeStart', to.self, toParams, from.self, fromParams).defaultPrevented) {
+        if ($rootScope.$broadcast('$stateChangeStart', to.self, toParams, from.self, fromParams, options).defaultPrevented) {
           $urlRouter.update();
           return TransitionPrevented;
         }
@@ -3215,7 +3215,7 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory) {
          * @param {State} fromState The current state, pre-transition.
          * @param {Object} fromParams The params supplied to the `fromState`.
          */
-          $rootScope.$broadcast('$stateChangeSuccess', to.self, toParams, from.self, fromParams);
+          $rootScope.$broadcast('$stateChangeSuccess', to.self, toParams, from.self, fromParams, options);
         }
         $urlRouter.update(true);
 
@@ -3242,7 +3242,7 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory) {
          * @param {Object} fromParams The params supplied to the `fromState`.
          * @param {Error} error The resolve error object.
          */
-        evt = $rootScope.$broadcast('$stateChangeError', to.self, toParams, from.self, fromParams, error);
+        evt = $rootScope.$broadcast('$stateChangeError', to.self, toParams, from.self, fromParams, error, options);
 
         if (!evt.defaultPrevented) {
             $urlRouter.update();
@@ -4007,6 +4007,15 @@ function $StateRefDirective($state, $timeout) {
     restrict: 'A',
     require: ['?^uiSrefActive', '?^uiSrefActiveEq'],
     link: function(scope, element, attrs, uiSrefActive) {
+
+      var enabled = true;
+      attrs.$observe('uiSrefEnabled', function(value) {
+          value = typeof value === 'undefined' ? true : value;
+          value = value === 'true' ? true : value;
+          value = value === 'false' ? false : value;
+          enabled = !!value;
+      });
+
       var ref = parseStateRef(attrs.uiSref, $state.current.name);
       var params = null, url = null, base = stateContext(element) || $state.$current;
       var newHref = null, isAnchor = element.prop("tagName") === "A";
@@ -4053,9 +4062,15 @@ function $StateRefDirective($state, $timeout) {
         var button = e.which || e.button;
         if ( !(button > 1 || e.ctrlKey || e.metaKey || e.shiftKey || element.attr('target')) ) {
           // HACK: This is to allow ng-clicks to be processed before the transition is initiated:
-          var transition = $timeout(function() {
-            $state.go(ref.state, params, options);
-          });
+          var transition;
+          if(enabled){
+            transition = $timeout(function() {
+              $state.go(ref.state, params, options);
+            });
+          } else {
+            transition = $timeout(function() {});
+          }
+          
           e.preventDefault();
 
           // if the state has no URL, ignore one preventDefault from the <a> directive.
